@@ -5,7 +5,10 @@ import cron from 'node-cron';
 import fs from 'fs';
 import path from 'path';
 
-
+const downloadDir = path.join(process.cwd(), 'downloads');
+if (!fs.existsSync(downloadDir)) {
+  fs.mkdirSync(downloadDir);
+}
 const app = express();
 app.use(cors());
 app.use(express.json());
