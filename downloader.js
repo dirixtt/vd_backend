@@ -1,29 +1,25 @@
 import { exec } from 'child_process';
+import { readdirSync } from 'fs';
 import path from 'path';
-import fs from 'fs';
 
 export function downloadVideo(url, format) {
   return new Promise((resolve, reject) => {
-    const outputTemplate = "downloads/%(title)s.%(ext)s";
-    let command = "";
+    const isInstagram = url.includes('instagram.com');
+    const cookiePath = path.join('yt-cookies', 'instagram.txt');
 
-    if (format === 'mp3') {
-      command = `yt-dlp -x --audio-format mp3 -o "${outputTemplate}" --print after_move:filepath ${url}`;
-    } else {
-      command = `yt-dlp -f best -o "${outputTemplate}" --print after_move:filepath ${url}`;
-    }
+    const args = format === 'mp3'
+      ? `yt-dlp -x --audio-format mp3 -o "downloads/%(title)s.%(ext)s" ${url}`
+      : `yt-dlp ${isInstagram ? `--cookies ${cookiePath}` : ''} -o "downloads/%(title)s.%(ext)s" ${url}`;
 
-    exec(command, (error, stdout) => {
-      if (error) return reject(error);
+    const before = new Set(readdirSync('downloads'));
 
-      const fullPath = stdout.trim(); // абсолютный путь к файлу
-      const baseName = path.basename(fullPath);
+    exec(args, (error, stdout, stderr) => {
+      if (error) return reject(stderr || error.message);
 
-      if (!fs.existsSync(fullPath)) {
-        return reject(new Error("Файл не найден"));
-      }
-
-      resolve(baseName); // возвращаем только имя файла
+      const after = new Set(readdirSync('downloads'));
+      const newFile = [...after].find(f => !before.has(f));
+      if (newFile) resolve(newFile);
+      else reject(new Error('Файл не найден'));
     });
   });
 }
