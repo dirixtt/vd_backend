@@ -25,8 +25,9 @@ app.post('/api/download', async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 Backend запущен на порт ${PORT}`));
 
-app.listen(3000, () => console.log('🚀 Backend запущен на http://localhost:3000'));
 // ⏰ Every 20 minutes, delete all files in 'downloads/'
 cron.schedule('*/20 * * * *', () => {
   const folder = path.join(process.cwd(), 'downloads');
